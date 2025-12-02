@@ -9,8 +9,9 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./scripts:/scripts
     networks:
-      - aviasales
+      - airbooking
 
   redis:
     image: redis:7-alpine
@@ -18,7 +19,6 @@ services:
     restart: unless-stopped
     volumes:
       - redis_data:/data
-      - ./scripts:/scripts
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -27,7 +27,7 @@ services:
     ports:
       - "6379:6379"
     networks:
-      - aviasales
+      - airbooking
 
   kafka:
     image: apache/kafka:latest
@@ -49,7 +49,7 @@ services:
       - "9092:9092"
       - "9094:9094"
     networks:
-      - aviasales
+      - airbooking
 
   
   kafka-ui:
@@ -64,39 +64,33 @@ services:
       - KAFKA_CLUSTERS_0_NAME=kraft
       - KAFKA_UI_AUTH_ENABLED=false
     networks:
-      - aviasales
+      - airbooking
 
   app:
-    image: golang:1.25
-    working_dir: /app
-    command: sh -c "go run ./cmd/app"
-    environment:
-      CONFIG_PATH: /app/config.yaml
-    volumes:
-      - ./:/app
+    build: .
+    container_name: airbooking-app
+    volumes: []         # больше не монтируем ./:/app
     depends_on:
       - postgres
       - redis
       - kafka
     ports:
       - "8080:8080"
+      - "50051:50051"
     networks:
-      - aviasales
+      - airbooking
 
   worker:
-    image: golang:1.25
-    working_dir: /app
-    command: sh -c "go run ./cmd/worker"
-    environment:
-      CONFIG_PATH: /app/config.yaml
-    volumes:
-      - ./:/app
+    build: .
+    container_name: airbooking-worker
+    command: ["./worker"]
+    volumes: []         # больше ничего не монтируем
     depends_on:
       - postgres
       - redis
       - kafka
     networks:
-      - aviasales
+      - airbooking
 
 volumes:
   postgres_data:
@@ -104,6 +98,6 @@ volumes:
   # kafka_data:
 
 networks:
-  aviasales:
-    name: aviasales
+  airbooking:
+    name: airbooking
     driver: bridge

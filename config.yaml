@@ -1,5 +1,9 @@
 http:
   address: ":8080"
+  swagger_dir: "internal/pb/swagger"
+
+grpc:
+  address: ":50051"
 
 database:
   host: "postgres"

@@ -8,13 +8,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Domenick1991/airbooking/api"
 	"github.com/Domenick1991/airbooking/config"
+	"github.com/Domenick1991/airbooking/internal/bootstrap"
 	"github.com/Domenick1991/airbooking/internal/cache"
 	"github.com/Domenick1991/airbooking/internal/kafka"
 	"github.com/Domenick1991/airbooking/internal/repository"
 	"github.com/Domenick1991/airbooking/internal/service"
-	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -29,7 +28,9 @@ func main() {
 		log.Fatalf("load config: %v", err)
 	}
 
-	ctx := context.Background()
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
 	pool, err := pgxpool.New(ctx, cfg.Database.DSN())
 	if err != nil {
 		log.Fatalf("connect postgres: %v", err)
@@ -53,24 +54,7 @@ func main() {
 		service.WithNotificationsTopic(cfg.Kafka.NotificationsTopic),
 	)
 
-	r := gin.Default()
-	apiGroup := r.Group("/api/v1")
-	flightHandler := api.NewFlightHandler(flightService)
-	bookingHandler := api.NewBookingHandler(bookingService)
-
-	flightHandler.Register(apiGroup.Group("/flights"))
-	bookingHandler.Register(apiGroup.Group("/bookings"))
-
-	serverErr := make(chan error, 1)
-	go func() { serverErr <- r.Run(cfg.HTTP.Address) }()
-
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
-
-	select {
-	case err := <-serverErr:
+	if err := bootstrap.Run(ctx, cfg, flightService, bookingService); err != nil {
 		log.Fatalf("server error: %v", err)
-	case s := <-sig:
-		log.Printf("received signal %v, shutting down", s)
 	}
 }

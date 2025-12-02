@@ -9,6 +9,7 @@ import (
 
 type Config struct {
 	HTTP    HTTPConfig    `yaml:"http"`
+	GRPC    GRPCConfig    `yaml:"grpc"`
 	Database DatabaseConfig `yaml:"database"`
 	Redis   RedisConfig   `yaml:"redis"`
 	Kafka   KafkaConfig   `yaml:"kafka"`
@@ -17,6 +18,11 @@ type Config struct {
 }
 
 type HTTPConfig struct {
+	Address    string `yaml:"address"`
+	SwaggerDir string `yaml:"swagger_dir"`
+}
+
+type GRPCConfig struct {
 	Address string `yaml:"address"`
 }
 
