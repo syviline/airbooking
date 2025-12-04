@@ -30,7 +30,7 @@ func (s *Server) ListFlights(ctx context.Context, _ *emptypb.Empty) (*flights_ap
 		Flights: make([]*models.Flight, 0, len(list)),
 	}
 	for _, f := range list {
-		resp.Flights = append(resp.Flights, toPBFlight(f))
+		resp.Flights = append(resp.Flights, toPBFlight(&f))
 	}
 	return resp, nil
 }
