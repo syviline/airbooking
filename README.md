@@ -43,6 +43,6 @@
 - Инфраструктура: `docker-compose.yaml` поднимает Postgres+Redis+Kafka+Kafka UI и два Go-контейнера (`app` и `worker`). Схема БД из `scripts/001_init.sql` загружается в Postgres (выполните скрипт после старта БД).
 
 ### Быстрый старт (docker compose)
-1. `docker compose up -d` — поднимает инфраструктуру, API и воркер (использует `config.yaml` в корне).
-2. Инициализируйте БД: `docker compose exec postgres psql -U app -d airbooking -f /app/scripts/001_init.sql`.
+1. `docker-compose up -d --build` — поднимает инфраструктуру, API и воркер (использует `config.yaml` в корне).
+2. Инициализируйте БД: `docker-compose exec postgres psql -U app -d airbooking -f /scripts/001_init.sql`.
 3. API доступно на `http://localhost:8080/api/v1`, Kafka UI — `http://localhost:8081`.
